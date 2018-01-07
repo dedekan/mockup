@@ -14,10 +14,20 @@
 .layer-extension {
   display: block;
   position: absolute;
-  bottom: 15px;
+  top: 15px;
+  left: 0;
+  right: 0;
   z-index: 1070;
-  width: 100%;
+  margin: auto;
+  max-width: 500px;
   text-align: center;
+}
+
+.layer-extension-wrapper {
+  display: inline-block;
+  margin: auto;
+  padding: 6px 15px;
+  border-radius: 25px;
 }
 
 .leaflet-control-attribution.leaflet-control a[href="http://leafletjs.com"]{
@@ -31,4 +41,37 @@
 .leaflet-touch .leaflet-control-zoom.leaflet-bar a {
   line-height: 25px;
   font-family: "Helvetica Neue For Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.layer-toolbox-list {
+  margin-top: 10px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.layer-toolbox-list.hide,
+.layer-toolbox-list.hide * {
+  width: 0;
+  height: 0;
+}
+
+.layer-toolbox-control-item {
+  margin-bottom: 6px;
+}
+
+.layer-toolbox-control-item span {
+  display: inline-block;
+}
+
+.layer-information {
+  display: block;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 200px;
+  z-index: 1070;
+}
+
+.layer-information .layer-information-action {
+  text-align: right;
 }

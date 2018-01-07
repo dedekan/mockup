@@ -9,7 +9,7 @@ import {
   TileLayer,
   Popup
 } from 'react-leaflet';
-import { Card, Checkbox } from 'antd';
+import { Button, Card, Checkbox, Tooltip } from 'antd';
 import update from 'immutability-helper';
 
 import './Map.css';
@@ -21,22 +21,64 @@ class Map extends Component {
     this.state = { 
       lng: 112.84,
       lat: -1.59,
-      zoom: 13,
+      zoom: 14,
       layers: [{
         id: 'block',
         title: 'Block',
         show: true,
         name: 'ehp:pg_block',
-        style: {
-          color: '#f79b07',
-          weight: 2,
-          opacity: 0.8,
-          fillOpacity: 0.6,
-          fillColor: '#f79b07'
-        }
+      }, {
+        id: 'sawit',
+        title: 'Sawit',
+        show: false,
+        name: 'ehp:pg_sawit'
+      }, {
+        id: 'jalan',
+        title: 'Jalan',
+        show: false,
+        name: 'ehp:pg_road'
       }],
-      loading: true,
-      url: process.env.REACT_APP_URL
+      toolboxShow: true,
+      url: process.env.REACT_APP_URL,
+      information: {}
+    };
+
+    this.toolboxHandler = () => {
+      this.setState(prevState => {
+        if (prevState.toolboxShow) {
+          return {
+            toolboxShow: false,
+            toolboxIcon: 'menu-unfold'
+          };
+        }
+        
+        return {
+          toolboxShow: true,
+          toolboxIcon: 'menu-fold'
+        };
+      });
+    }
+
+    this.handleMapClick = e => {
+      console.log(e);
+    };
+
+    this.handleZoom = e => {
+      this.setState({
+        zoom: e.target._zoom
+      });
+    };
+
+    this.zoomIn = () => {
+      this.setState(prevState => {
+        return { zoom: prevState.zoom + 1 };
+      });
+    };
+
+    this.zoomOut = () => {
+      this.setState(prevState => {
+        return { zoom: prevState.zoom - 1 };
+      });
     };
 
     this.changeControl = (e) => {
@@ -71,6 +113,8 @@ class Map extends Component {
           transparent={true}
           format="image/png"
           key={layer.id}
+          maxNativeZoom={22}
+          maxZoom={22}
         />
       ));
 
@@ -95,31 +139,62 @@ class Map extends Component {
 
     return <span><i>No layers to show</i></span>;
   }
+
+  renderInformation() {
+    return null;
+  }
   
   render() {
     // kak.duckdns.com
+
     return (
-      <LeafletMap
-        center={[this.state.lat, this.state.lng]}
-        zoom={this.state.zoom}
-        zoomControl={false}
-        doubleClickZoom={false}
-      >
-        <WMSTileLayer
-          layers="ehp:ehp_base"
-          url="//192.168.0.19:8080/geoserver/ehp/wms"
-        />
-        {this.renderLayerMap()}
+      <React.Fragment>
+        <LeafletMap
+          center={[this.state.lat, this.state.lng]}
+          zoom={this.state.zoom}
+          zoomControl={false}
+          doubleClickZoom={false}
+          onzoomend={this.handleZoom}
+          onclick={this.handleMapClick}
+        >
+          <WMSTileLayer
+            layers="ehp:ehp_base"
+            url="//192.168.0.19:8080/geoserver/ehp/wms"
+            maxNativeZoom={22}
+            maxZoom={22}
+          />
+          {this.renderLayerMap()}
+        </LeafletMap>
         <div className="layer-toolbox">
-          <Card
-            loading={this.state.loading}
-            title="Available Layer"
-          >
+          <Tooltip title="Toolbox" mouseEnterDelay={2}>
+            <Button type="primary" icon='switcher' onClick={this.toolboxHandler} />
+          </Tooltip>
+          <Card title="Available Layer" className={`layer-toolbox-list ${this.state.toolboxShow ? '' : 'hide'}`}>
             {this.renderLayerControls()}
           </Card>
         </div>
-        <ZoomControl position="topright" />
-      </LeafletMap>
+        <div className="layer-extension">
+          <div className="layer-extension-wrapper">
+            <Tooltip title="Zoom In">
+              <Button type="primary" shape="circle" icon="plus" onClick={this.zoomIn} />
+            </Tooltip>
+            <span />
+            <Tooltip title="Zoom Out">
+              <Button type="primary" shape="circle" icon="minus" onClick={this.zoomOut} />
+            </Tooltip>
+          </div>
+        </div>
+        <div className="layer-information">
+          <div className="layer-information-action">
+            <Tooltip title="Information">
+              <Button type="primary" icon="info" />
+            </Tooltip>
+          </div>
+          <div className="layer-information-body">
+            {this.renderInformation()}
+          </div>
+        </div>
+      </React.Fragment>
     )
   }
 }

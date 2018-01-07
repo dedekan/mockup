@@ -1,3 +1,8 @@
 .leaflet-container {
   min-height: 100vh;
+  position: relative;
+}
+
+.map-container {
+  position: relative;
 }

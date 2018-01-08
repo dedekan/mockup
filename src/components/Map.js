@@ -19,8 +19,8 @@ function serializeQuery(obj) {
 }
 
 function getRandomColor() {
-  var letters = '0123456789ABCDEF'.split('');
-  var color = '#';
+  var letters = "0123456789ABCDEF".split("");
+  var color = "#";
   for (var i = 0; i < 6; i++) {
     color += letters[Math.floor(Math.random() * 16)];
   }
@@ -66,7 +66,7 @@ class Map extends PureComponent {
       url: process.env.REACT_APP_URL,
       api: process.env.REACT_APP_API_HOST,
       information: {},
-      statistics: {},
+      statistics: {}
     };
 
     this.toolboxHandler = () => {
@@ -123,12 +123,16 @@ class Map extends PureComponent {
             const newData = immutability(this.state.information, {
               $set: data
             });
-            this.setState({
-              information: newData,
-              infoShow: data.features && data.features.length > 0 ? true : false
-            }, () => {
-              this.doFetchStatistics();
-            });
+            this.setState(
+              {
+                information: newData,
+                infoShow:
+                  data.features && data.features.length > 0 ? true : false
+              },
+              () => {
+                this.doFetchStatistics();
+              }
+            );
           })
           .catch(err => console.log(err));
       } else {
@@ -148,7 +152,7 @@ class Map extends PureComponent {
 
       let resultBloks = [];
       if (features && features.length > 0) {
-        const bloks = [] 
+        const bloks = [];
         features.forEach(feature => {
           if (feature.properties) {
             if (feature.properties.blok) {
@@ -160,7 +164,7 @@ class Map extends PureComponent {
             }
           }
         });
-  
+
         resultBloks = uniq(bloks);
       }
 
@@ -184,7 +188,7 @@ class Map extends PureComponent {
           })
           .catch(error => console.log(error));
       }
-    }
+    };
 
     this.handleZoom = e => {
       this.setState({
@@ -294,7 +298,7 @@ class Map extends PureComponent {
 
       const properties = Object.keys(features[0].properties);
       properties.forEach(item => {
-        if (item !== 'id') {
+        if (item !== "id") {
           columns.push({ title: item, dataIndex: item, key: item });
         }
       });
@@ -313,7 +317,7 @@ class Map extends PureComponent {
 
       const dataSource = features.map((feature, index) => {
         const { id, properties } = feature;
-        if (properties.hasOwnProperty('id')) {
+        if (properties.hasOwnProperty("id")) {
           delete properties.id;
         }
         return {
@@ -351,7 +355,7 @@ class Map extends PureComponent {
 
   renderStatisticsChart() {
     const { statistics } = this.state;
-    if (statistics.status === 'success' && statistics.data) {
+    if (statistics.status === "success" && statistics.data) {
       const mappedData = map(statistics.data, (datum, key) => {
         return {
           name: key,
@@ -370,7 +374,12 @@ class Map extends PureComponent {
               cx="50%"
               cy="50%"
             >
-              {mappedData.map((entry, index) => <Cell key={`cell-entry-${entry}-${index}`} fill={getRandomColor()}/>)}
+              {mappedData.map((entry, index) => (
+                <Cell
+                  key={`cell-entry-${entry}-${index}`}
+                  fill={getRandomColor()}
+                />
+              ))}
             </Pie>
             <ChartTooltip />
             <Legend verticalAlign="bottom" height={36} />
@@ -416,9 +425,9 @@ class Map extends PureComponent {
           <div className="layer-toolbox-wrapper">
             <Card
               title="Layers"
-              className={`layer-toolbox-list ${
-                this.state.toolboxShow ? "" : "hide"
-              }`}
+              className={`layer-toolbox-list ${this.state.toolboxShow
+                ? ""
+                : "hide"}`}
             >
               {this.renderLayerControls()}
             </Card>
@@ -454,9 +463,9 @@ class Map extends PureComponent {
           <div className="information-body-wrapper">
             <Card
               title="Information"
-              className={`layer-information-body ${
-                this.state.infoShow ? "" : "hide"
-              }`}
+              className={`layer-information-body ${this.state.infoShow
+                ? ""
+                : "hide"}`}
             >
               <div className="layer-information-table">
                 {this.renderInformationTable()}

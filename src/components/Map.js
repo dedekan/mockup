@@ -2,17 +2,22 @@ import React, { Component } from 'react';
 import {
   Map as LeafletMap,
   WMSTileLayer,
-  FeatureGroup,
-  GeoJSON,
-  Pane,
-  ZoomControl,
-  TileLayer,
-  Popup
+  FeatureGroup
 } from 'react-leaflet';
-import { Button, Card, Checkbox, Tooltip } from 'antd';
+import { Button, Card, Checkbox, Tooltip, Table } from 'antd';
 import update from 'immutability-helper';
+import find from 'lodash/find';
 
 import './Map.css';
+
+function serializeQuery (obj) {
+  var str = [];
+  for (var p in obj)
+    if (obj.hasOwnProperty(p)) {
+      str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+    }
+  return str.join("&");
+}
 
 class Map extends Component {
   constructor() {
@@ -39,6 +44,7 @@ class Map extends Component {
         name: 'ehp:pg_road'
       }],
       toolboxShow: true,
+      infoShow: false,
       url: process.env.REACT_APP_URL,
       information: {}
     };
@@ -60,7 +66,58 @@ class Map extends Component {
     }
 
     this.handleMapClick = e => {
-      console.log(e);
+      const { layers } = this.state;
+      const filteredLayers = layers.filter(layer => layer.show);
+
+      if (filteredLayers && filteredLayers.length > 0) {
+        const layer = filteredLayers[0];
+        const { latlng } = e;
+        const bbox = {
+          southwest: [ (latlng.lng - 0.005), (latlng.lat) - 0.005 ],
+          northeast: [ (latlng.lng + 0.005), (latlng.lat) + 0.005 ]
+        };
+        const stringBbox = Object.values(bbox).toString();
+        
+        const queryParam = {
+          service: 'wms',
+          version: '1.1',
+          request: 'GetFeatureInfo',
+          format: 'image/png',
+          transparent: true,
+          query_layers: layer.name,
+          layers: layer.name,
+          info_format: 'application/json',
+          feature_count: 50,
+          x: 50,
+          y: 50,
+          srs: 'EPSG:4326',
+          width: 101,
+          height: 101,
+          bbox: stringBbox
+        };
+  
+        const queryUrl = `${this.state.url}?${serializeQuery(queryParam)}`;
+        fetch(queryUrl)
+          .then(response => response.json())
+          .then(data => {
+            const newData = update(this.state.information, {
+              $set: data
+            });
+            this.setState({
+              information: newData,
+              infoShow: data.features && data.features.length > 0 ? true : false
+            });
+          })
+          .catch(err => console.log(err));
+      } else {
+        const newData = update(this.state.information, {
+          $set: {}
+        });
+        this.setState({
+          information: newData,
+          infoShow: false
+        });
+      }
     };
 
     this.handleZoom = e => {
@@ -72,12 +129,17 @@ class Map extends Component {
     this.zoomIn = () => {
       this.setState(prevState => {
         return { zoom: prevState.zoom + 1 };
+      }, () => {
+        this.leafMap.leafletElement.setZoom(this.state.zoom);
       });
+      
     };
 
     this.zoomOut = () => {
       this.setState(prevState => {
         return { zoom: prevState.zoom - 1 };
+      }, () => {
+        this.leafMap.leafletElement.setZoom(this.state.zoom);
       });
     };
 
@@ -89,11 +151,17 @@ class Map extends Component {
             $set: checked
           }
         }
-      })
+      });
       this.setState({
         layers: newData
       });
     };
+
+    this.infoHandler = e => {
+      this.setState({
+        infoShow: !this.state.infoShow
+      });
+    }
   }
 
   componentWillMount() {
@@ -107,15 +175,16 @@ class Map extends Component {
     const filteredLayers = layers.filter(layer => layer.show);
     if (filteredLayers && filteredLayers.length > 0) {
       const mappedLayers = filteredLayers.map(layer => (
-        <WMSTileLayer
-          layers={layer.name}
-          url={this.state.url}
-          transparent={true}
-          format="image/png"
-          key={layer.id}
-          maxNativeZoom={22}
-          maxZoom={22}
-        />
+        <FeatureGroup key={layer.id}>
+          <WMSTileLayer
+            layers={layer.name}
+            url={this.state.url}
+            transparent={true}
+            format="image/png"
+            maxNativeZoom={22}
+            maxZoom={22}
+          />
+        </FeatureGroup>
       ));
 
       return <div className="layer-map">{mappedLayers}</div>;
@@ -140,8 +209,67 @@ class Map extends Component {
     return <span><i>No layers to show</i></span>;
   }
 
-  renderInformation() {
-    return null;
+  renderInformationTable() {
+    const { information, layers } = this.state
+    const { features } = information;
+
+    if (features && features.length > 0) {
+      const columns = [
+        { title: 'ID', dataIndex: 'id', key: 'id' }
+      ];
+      
+      const properties = Object.keys(features[0].properties);
+      properties.forEach(item => {
+        columns.push({ title: item, dataIndex: item, key: item });
+      });
+
+      const showColumns = columns.slice(0, 3);
+      const hideColumns = columns.slice(3, columns.length + 1);
+
+      const expandedRecord = record => {
+        const hideContent = hideColumns.map(item => {
+          return `${item.key}: ${record[item.key]}`;
+        }).join(', ');
+        return (
+          <p style={{ margin: 0 }}>{hideContent}</p>
+        );
+      };
+      const dataSource = features.map((feature, index) => {
+        const { id, properties } = feature;
+        return {
+          id,
+          key: id,
+          ...properties
+        };
+      });
+
+      const layerCode = dataSource[0].id.split('.')[0];
+      const shownLayer = find(layers, item => {
+        if (item && item.name && item.name.includes(layerCode)) {
+          return item;
+        }
+        return null;
+      });
+
+      return (
+        <React.Fragment>
+          {shownLayer ? (
+            <h4>{shownLayer.title} Layer</h4>
+          ) : null }
+          <Table
+            columns={showColumns}
+            expandedRowRender={expandedRecord}
+            dataSource={dataSource}
+            pagination={false}
+            scroll={{
+              x: 320,
+              y: 400
+            }}
+          />
+        </React.Fragment>
+      );
+    }
+    return <span>Click something inside active layer</span>;
   }
   
   render() {
@@ -156,10 +284,11 @@ class Map extends Component {
           doubleClickZoom={false}
           onzoomend={this.handleZoom}
           onclick={this.handleMapClick}
+          ref={mapId => { this.leafMap = mapId; }}
         >
           <WMSTileLayer
             layers="ehp:ehp_base"
-            url="//192.168.0.19:8080/geoserver/ehp/wms"
+            url={this.state.url}
             maxNativeZoom={22}
             maxZoom={22}
           />
@@ -169,29 +298,35 @@ class Map extends Component {
           <Tooltip title="Toolbox" mouseEnterDelay={2}>
             <Button type="primary" icon='switcher' onClick={this.toolboxHandler} />
           </Tooltip>
-          <Card title="Available Layer" className={`layer-toolbox-list ${this.state.toolboxShow ? '' : 'hide'}`}>
-            {this.renderLayerControls()}
-          </Card>
+          <div className="layer-toolbox-wrapper">
+            <Card title="Available Layer" className={`layer-toolbox-list ${this.state.toolboxShow ? '' : 'hide'}`}>
+              {this.renderLayerControls()}
+            </Card>
+          </div>
         </div>
         <div className="layer-extension">
           <div className="layer-extension-wrapper">
-            <Tooltip title="Zoom In">
+            <Tooltip title="Zoom In" placement="bottom">
               <Button type="primary" shape="circle" icon="plus" onClick={this.zoomIn} />
             </Tooltip>
             <span />
-            <Tooltip title="Zoom Out">
+            <Tooltip title="Zoom Out" placement="bottom">
               <Button type="primary" shape="circle" icon="minus" onClick={this.zoomOut} />
             </Tooltip>
           </div>
         </div>
         <div className="layer-information">
           <div className="layer-information-action">
-            <Tooltip title="Information">
-              <Button type="primary" icon="info" />
+            <Tooltip title="Information" placement="bottom">
+              <Button type="primary" icon="info" onClick={this.infoHandler}/>
             </Tooltip>
           </div>
-          <div className="layer-information-body">
-            {this.renderInformation()}
+          <div className="information-body-wrapper">
+            <Card title="Information and Analysis" className={`layer-information-body ${this.state.infoShow ? '' : 'hide'}`}>
+              <div className="layer-information-table">
+                {this.renderInformationTable()}
+              </div>
+            </Card>
           </div>
         </div>
       </React.Fragment>

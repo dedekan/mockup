@@ -1,8 +1,21 @@
+p, span, h5, h6, a, button, input, select, textarea, ul, li, div {
+  font-family: "Adelle Sans Regular", "Helvetica Neue For Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+}
+
+em {
+  font-family: "Adelle Sans Light", "Helvetica Neue For Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+}
+
+strong, b {
+  font-family: "Adelle Sans Bold", "Helvetica Neue For Number", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+}
+
 .leaflet-container {
-  min-height: 100vh;
+  min-height: calc(100vh - 64px);
   position: relative;
 }
 
 .map-container {
   position: relative;
+  margin-top: 64px;
 }

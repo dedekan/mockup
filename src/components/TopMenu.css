@@ -1,0 +1,35 @@
+.app-header {
+  position: fixed;
+  width: 100%;
+}
+
+.app-header img {
+  width: 32px;
+}
+
+.app-header a {
+  color: #fff;
+}
+
+.header-logo {
+  width: 120px;
+  height: 64px;
+  padding-left: 14px;
+  padding-right: 14px;
+  color: #fff;
+  font-weight: 600;
+  /* margin: 16px 24px 16px 0; */
+  float: left;
+}
+
+.header-menu {
+  display: inline-block;
+}
+
+.header-menu-right {
+  float: right;
+}
+
+.ant-dropdown-menu-item.header-inner-menu {
+  padding: 10px 18px;
+}

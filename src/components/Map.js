@@ -31,6 +31,12 @@ class Map extends Component {
           name: "ehp:pg_block"
         },
         {
+          id: "planted",
+          title: "Planted",
+          show: false,
+          name: "ehp:pg_landuse"
+        },
+        {
           id: "sawit",
           title: "Sawit",
           show: false,

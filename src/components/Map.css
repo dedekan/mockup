@@ -18,8 +18,8 @@
   left: 0;
   right: 0;
   z-index: 1000;
+  max-width: 200px;
   margin: auto;
-  max-width: 500px;
   text-align: center;
 }
 
@@ -45,12 +45,16 @@
 
 .layer-toolbox-list {
   margin-top: 10px;
+  width: auto;
+  height: auto;
   transform: translateX(0);
   will-change: transform;
 }
 
 .layer-toolbox-list.hide,
 .layer-toolbox-list.hide * {
+  width: 0;
+  height: 0;
   transform: translateX(-200px);
 }
 
@@ -81,6 +85,8 @@
 
 .layer-information-body {
   margin-top: 10px;
+  width: auto;
+  height: auto;
   transform: translateX(0);
   will-change: transform;
 }
@@ -88,4 +94,6 @@
 .layer-information-body.hide,
 .layer-information-body.hide * {
   transform: translateX(400px);
+  width: 0;
+  height: 0;
 }

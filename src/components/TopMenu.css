@@ -1,6 +1,14 @@
 .app-header {
   position: fixed;
+  display: flex;
   width: 100%;
+  flex-direction: row;
+  flex-basis: 33%;
+  flex-wrap: wrap;
+}
+
+.app-header > div {
+  flex-grow: 1;
 }
 
 .app-header img {
@@ -11,23 +19,18 @@
   color: #fff;
 }
 
-.header-logo {
-  width: 120px;
-  height: 64px;
-  padding-left: 14px;
-  padding-right: 14px;
-  color: #fff;
-  font-weight: 600;
-  /* margin: 16px 24px 16px 0; */
-  float: left;
-}
-
 .header-menu {
   display: inline-block;
 }
 
+.header-menu-center {
+  align-self: center;
+  text-align: center;
+}
+
 .header-menu-right {
-  float: right;
+  align-self: flex-end;
+  text-align: right;
 }
 
 .ant-dropdown-menu-item.header-inner-menu {

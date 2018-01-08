@@ -262,7 +262,6 @@ class Map extends Component {
             dataSource={dataSource}
             pagination={false}
             scroll={{
-              x: 320,
               y: 400
             }}
           />

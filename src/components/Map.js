@@ -1,8 +1,11 @@
-import React, { Component } from "react";
+import React, { PureComponent } from "react";
 import { Map as LeafletMap, WMSTileLayer, FeatureGroup } from "react-leaflet";
 import { Button, Card, Checkbox, Tooltip, Table } from "antd";
-import update from "immutability-helper";
+import immutability from "immutability-helper";
 import find from "lodash/find";
+import uniq from "lodash/uniq";
+import map from "lodash/map";
+import { PieChart, Pie, Tooltip as ChartTooltip, Legend, Cell } from "recharts";
 
 import "./Map.css";
 
@@ -15,7 +18,16 @@ function serializeQuery(obj) {
   return str.join("&");
 }
 
-class Map extends Component {
+function getRandomColor() {
+  var letters = '0123456789ABCDEF'.split('');
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+class Map extends PureComponent {
   constructor() {
     super();
 
@@ -54,7 +66,7 @@ class Map extends Component {
       url: process.env.REACT_APP_URL,
       api: process.env.REACT_APP_API_HOST,
       information: {},
-      statistics: {}
+      statistics: {},
     };
 
     this.toolboxHandler = () => {
@@ -108,17 +120,19 @@ class Map extends Component {
         fetch(queryUrl)
           .then(response => response.json())
           .then(data => {
-            const newData = update(this.state.information, {
+            const newData = immutability(this.state.information, {
               $set: data
             });
             this.setState({
               information: newData,
               infoShow: data.features && data.features.length > 0 ? true : false
+            }, () => {
+              this.doFetchStatistics();
             });
           })
           .catch(err => console.log(err));
       } else {
-        const newData = update(this.state.information, {
+        const newData = immutability(this.state.information, {
           $set: {}
         });
         this.setState({
@@ -127,6 +141,50 @@ class Map extends Component {
         });
       }
     };
+
+    this.doFetchStatistics = () => {
+      const { information } = this.state;
+      const { features } = information;
+
+      let resultBloks = [];
+      if (features && features.length > 0) {
+        const bloks = [] 
+        features.forEach(feature => {
+          if (feature.properties) {
+            if (feature.properties.blok) {
+              bloks.push(feature.properties.blok);
+            } else if (feature.properties.blok_1) {
+              bloks.push(feature.properties.blok_1);
+            } else if (feature.properties.blok_2) {
+              bloks.push(feature.properties.blok_2);
+            }
+          }
+        });
+  
+        resultBloks = uniq(bloks);
+      }
+
+      if (resultBloks.length > 0) {
+        const options = {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            blok: resultBloks
+          })
+        };
+        const queryUrl = this.state.api;
+        fetch(queryUrl, options)
+          .then(response => response.json())
+          .then(data => {
+            const newData = immutability(this.state.statistics, { $set: data });
+            this.setState({ statistics: newData });
+          })
+          .catch(error => console.log(error));
+      }
+    }
 
     this.handleZoom = e => {
       this.setState({
@@ -158,7 +216,7 @@ class Map extends Component {
 
     this.changeControl = e => {
       const { checked } = e.target;
-      const newData = update(this.state.layers, {
+      const newData = immutability(this.state.layers, {
         [e.target["data-index"]]: {
           show: {
             $set: checked
@@ -175,12 +233,6 @@ class Map extends Component {
         infoShow: !this.state.infoShow
       });
     };
-  }
-
-  componentWillMount() {
-    this.setState({
-      loading: false
-    });
   }
 
   renderLayerMap() {
@@ -242,7 +294,9 @@ class Map extends Component {
 
       const properties = Object.keys(features[0].properties);
       properties.forEach(item => {
-        columns.push({ title: item, dataIndex: item, key: item });
+        if (item !== 'id') {
+          columns.push({ title: item, dataIndex: item, key: item });
+        }
       });
 
       const showColumns = columns.slice(0, 3);
@@ -256,8 +310,12 @@ class Map extends Component {
           .join(", ");
         return <p style={{ margin: 0 }}>{hideContent}</p>;
       };
+
       const dataSource = features.map((feature, index) => {
         const { id, properties } = feature;
+        if (properties.hasOwnProperty('id')) {
+          delete properties.id;
+        }
         return {
           id,
           key: id,
@@ -265,7 +323,7 @@ class Map extends Component {
         };
       });
 
-      const layerCode = dataSource[0].id.split(".")[0];
+      const layerCode = dataSource[0].key.split(".")[0];
       const shownLayer = find(layers, item => {
         if (item && item.name && item.name.includes(layerCode)) {
           return item;
@@ -292,41 +350,40 @@ class Map extends Component {
   }
 
   renderStatisticsChart() {
-    const { information, layer } = this.state;
-    const { features } = information;
+    const { statistics } = this.state;
+    if (statistics.status === 'success' && statistics.data) {
+      const mappedData = map(statistics.data, (datum, key) => {
+        return {
+          name: key,
+          value: datum
+        };
+      });
 
-    if (features && features.length > 0) {
-      const properties = Object.keys(features[0].properties);
-      const options = {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          blok: ["A10", "B07", "C25"]
-        })
-      };
-      const queryUrl = `${this.state.api}`;
-      fetch(queryUrl, options)
-        .then(response => response.json())
-        .then(data => {
-          const newData = update(this.state.statistics, { $set: data });
-          //this.setState({ statistics: newData });
-        })
-        .catch(error => console.log(error));
+      return (
+        <React.Fragment>
+          <h4>Statistics</h4>
+          <PieChart width={320} height={320}>
+            <Pie
+              data={mappedData}
+              dataKey="value"
+              innerRadius={50}
+              cx="50%"
+              cy="50%"
+            >
+              {mappedData.map((entry, index) => <Cell key={`cell-entry-${entry}-${index}`} fill={getRandomColor()}/>)}
+            </Pie>
+            <ChartTooltip />
+            <Legend verticalAlign="bottom" height={36} />
+          </PieChart>
+        </React.Fragment>
+      );
     }
+
     return null;
-    //return (
-    //<React.Fragment>
-    //<h4>Testing render</h4>
-    //</React.Fragment>
-    //);
   }
 
   render() {
     // kak.duckdns.com
-    console.log(this.state.statistics);
     return (
       <React.Fragment>
         <LeafletMap
@@ -404,16 +461,7 @@ class Map extends Component {
               <div className="layer-information-table">
                 {this.renderInformationTable()}
               </div>
-            </Card>
-          </div>
-          <div className="statistics-body-wrapper">
-            <Card
-              title="Statistics"
-              className={`layer-information-body ${
-                this.state.infoShow ? "" : "hide"
-              }`}
-            >
-              <div className="blok-statistics-table">
+              <div className="layer-statistics-table">
                 {this.renderStatisticsChart()}
               </div>
             </Card>

@@ -51,30 +51,26 @@ const projectMenu = (
   </Menu>
 )
 
-class Header extends React.Component {
-  render() {
-    return (
-      <Layout.Header className="app-header">
-        <div className="header-menu-left">
-          <Dropdown overlay={projectMenu} trigger={['click']}>
-            <a className="header-menu">
-              <Icon type="folder" /> Projects
+const Header = () => (
+  <Layout.Header className="app-header">
+    <div className="header-menu-left">
+      <Dropdown overlay={projectMenu} trigger={['click']}>
+        <a className="header-menu">
+          <Icon type="folder" /> Projects
             </a>
-          </Dropdown>
-        </div>
-        <div className="header-menu-center">
-          <a className="">Cimaps</a>
-        </div>
-        <div className="header-menu-right">
-          <Dropdown overlay={userMenu} trigger={['click']}>
-            <a className="header-menu">
-              <img src='/admin.png' alt="User" /> Tester
+      </Dropdown>
+    </div>
+    <div className="header-menu-center">
+      <a className="">Cimaps</a>
+    </div>
+    <div className="header-menu-right">
+      <Dropdown overlay={userMenu} trigger={['click']}>
+        <a className="header-menu">
+          <img src='/admin.png' alt="User" /> Tester
             </a>
-          </Dropdown>
-        </div>
-      </Layout.Header>
-    );
-  }
-}
+      </Dropdown>
+    </div>
+  </Layout.Header>
+);
 
 export default Header;

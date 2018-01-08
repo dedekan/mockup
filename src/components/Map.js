@@ -1,16 +1,12 @@
-import React, { Component } from 'react';
-import {
-  Map as LeafletMap,
-  WMSTileLayer,
-  FeatureGroup
-} from 'react-leaflet';
-import { Button, Card, Checkbox, Tooltip, Table } from 'antd';
-import update from 'immutability-helper';
-import find from 'lodash/find';
+import React, { Component } from "react";
+import { Map as LeafletMap, WMSTileLayer, FeatureGroup } from "react-leaflet";
+import { Button, Card, Checkbox, Tooltip, Table } from "antd";
+import update from "immutability-helper";
+import find from "lodash/find";
 
-import './Map.css';
+import "./Map.css";
 
-function serializeQuery (obj) {
+function serializeQuery(obj) {
   var str = [];
   for (var p in obj)
     if (obj.hasOwnProperty(p)) {
@@ -22,31 +18,37 @@ function serializeQuery (obj) {
 class Map extends Component {
   constructor() {
     super();
-    
-    this.state = { 
-      lng: 112.84,
-      lat: -1.59,
+
+    this.state = {
+      lng: 112.837,
+      lat: -1.578,
       zoom: 14,
-      layers: [{
-        id: 'block',
-        title: 'Block',
-        show: true,
-        name: 'ehp:pg_block',
-      }, {
-        id: 'sawit',
-        title: 'Sawit',
-        show: false,
-        name: 'ehp:pg_sawit'
-      }, {
-        id: 'jalan',
-        title: 'Jalan',
-        show: false,
-        name: 'ehp:pg_road'
-      }],
+      layers: [
+        {
+          id: "block",
+          title: "Block",
+          show: true,
+          name: "ehp:pg_block"
+        },
+        {
+          id: "sawit",
+          title: "Sawit",
+          show: false,
+          name: "ehp:pg_sawit"
+        },
+        {
+          id: "jalan",
+          title: "Jalan",
+          show: false,
+          name: "ehp:pg_road"
+        }
+      ],
       toolboxShow: true,
       infoShow: false,
       url: process.env.REACT_APP_URL,
-      information: {}
+      api: process.env.REACT_APP_API_HOST,
+      information: {},
+      statistics: {}
     };
 
     this.toolboxHandler = () => {
@@ -54,16 +56,16 @@ class Map extends Component {
         if (prevState.toolboxShow) {
           return {
             toolboxShow: false,
-            toolboxIcon: 'menu-unfold'
+            toolboxIcon: "menu-unfold"
           };
         }
-        
+
         return {
           toolboxShow: true,
-          toolboxIcon: 'menu-fold'
+          toolboxIcon: "menu-fold"
         };
       });
-    }
+    };
 
     this.handleMapClick = e => {
       const { layers } = this.state;
@@ -73,29 +75,29 @@ class Map extends Component {
         const layer = filteredLayers[0];
         const { latlng } = e;
         const bbox = {
-          southwest: [ (latlng.lng - 0.005), (latlng.lat) - 0.005 ],
-          northeast: [ (latlng.lng + 0.005), (latlng.lat) + 0.005 ]
+          southwest: [latlng.lng - 0.005, latlng.lat - 0.005],
+          northeast: [latlng.lng + 0.005, latlng.lat + 0.005]
         };
         const stringBbox = Object.values(bbox).toString();
-        
+
         const queryParam = {
-          service: 'wms',
-          version: '1.1',
-          request: 'GetFeatureInfo',
-          format: 'image/png',
+          service: "wms",
+          version: "1.1",
+          request: "GetFeatureInfo",
+          format: "image/png",
           transparent: true,
           query_layers: layer.name,
           layers: layer.name,
-          info_format: 'application/json',
+          info_format: "application/json",
           feature_count: 50,
           x: 50,
           y: 50,
-          srs: 'EPSG:4326',
+          srs: "EPSG:4326",
           width: 101,
           height: 101,
           bbox: stringBbox
         };
-  
+
         const queryUrl = `${this.state.url}?${serializeQuery(queryParam)}`;
         fetch(queryUrl)
           .then(response => response.json())
@@ -127,26 +129,31 @@ class Map extends Component {
     };
 
     this.zoomIn = () => {
-      this.setState(prevState => {
-        return { zoom: prevState.zoom + 1 };
-      }, () => {
-        this.leafMap.leafletElement.setZoom(this.state.zoom);
-      });
-      
+      this.setState(
+        prevState => {
+          return { zoom: prevState.zoom + 1 };
+        },
+        () => {
+          this.leafMap.leafletElement.setZoom(this.state.zoom);
+        }
+      );
     };
 
     this.zoomOut = () => {
-      this.setState(prevState => {
-        return { zoom: prevState.zoom - 1 };
-      }, () => {
-        this.leafMap.leafletElement.setZoom(this.state.zoom);
-      });
+      this.setState(
+        prevState => {
+          return { zoom: prevState.zoom - 1 };
+        },
+        () => {
+          this.leafMap.leafletElement.setZoom(this.state.zoom);
+        }
+      );
     };
 
-    this.changeControl = (e) => {
+    this.changeControl = e => {
       const { checked } = e.target;
       const newData = update(this.state.layers, {
-        [e.target['data-index']]: {
+        [e.target["data-index"]]: {
           show: {
             $set: checked
           }
@@ -161,7 +168,7 @@ class Map extends Component {
       this.setState({
         infoShow: !this.state.infoShow
       });
-    }
+    };
   }
 
   componentWillMount() {
@@ -199,25 +206,34 @@ class Map extends Component {
     if (layers && layers.length > 0) {
       const mappedLayers = layers.map((layer, index) => (
         <div className="layer-toolbox-control-item" key={`control-${layer.id}`}>
-          <Checkbox id={layer.id} data-index={index} onChange={this.changeControl} checked={layer.show}>{layer.title}</Checkbox>
+          <Checkbox
+            id={layer.id}
+            data-index={index}
+            onChange={this.changeControl}
+            checked={layer.show}
+          >
+            {layer.title}
+          </Checkbox>
         </div>
       ));
 
       return <div className="layer-toolbox-controls">{mappedLayers}</div>;
     }
 
-    return <span><i>No layers to show</i></span>;
+    return (
+      <span>
+        <i>No layers to show</i>
+      </span>
+    );
   }
 
   renderInformationTable() {
-    const { information, layers } = this.state
+    const { information, layers } = this.state;
     const { features } = information;
 
     if (features && features.length > 0) {
-      const columns = [
-        { title: 'ID', dataIndex: 'id', key: 'id' }
-      ];
-      
+      const columns = [{ title: "ID", dataIndex: "id", key: "id" }];
+
       const properties = Object.keys(features[0].properties);
       properties.forEach(item => {
         columns.push({ title: item, dataIndex: item, key: item });
@@ -227,12 +243,12 @@ class Map extends Component {
       const hideColumns = columns.slice(3, columns.length + 1);
 
       const expandedRecord = record => {
-        const hideContent = hideColumns.map(item => {
-          return `${item.key}: ${record[item.key]}`;
-        }).join(', ');
-        return (
-          <p style={{ margin: 0 }}>{hideContent}</p>
-        );
+        const hideContent = hideColumns
+          .map(item => {
+            return `${item.key}: ${record[item.key]}`;
+          })
+          .join(", ");
+        return <p style={{ margin: 0 }}>{hideContent}</p>;
       };
       const dataSource = features.map((feature, index) => {
         const { id, properties } = feature;
@@ -243,7 +259,7 @@ class Map extends Component {
         };
       });
 
-      const layerCode = dataSource[0].id.split('.')[0];
+      const layerCode = dataSource[0].id.split(".")[0];
       const shownLayer = find(layers, item => {
         if (item && item.name && item.name.includes(layerCode)) {
           return item;
@@ -253,9 +269,7 @@ class Map extends Component {
 
       return (
         <React.Fragment>
-          {shownLayer ? (
-            <h4>{shownLayer.title} Layer</h4>
-          ) : null }
+          {shownLayer ? <h4>{shownLayer.title} Layer</h4> : null}
           <Table
             columns={showColumns}
             expandedRowRender={expandedRecord}
@@ -270,10 +284,43 @@ class Map extends Component {
     }
     return <span>Click something inside active layer</span>;
   }
-  
+
+  renderStatisticsChart() {
+    const { information, layer } = this.state;
+    const { features } = information;
+
+    if (features && features.length > 0) {
+      const properties = Object.keys(features[0].properties);
+      const options = {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          blok: ["A10", "B07", "C25"]
+        })
+      };
+      const queryUrl = `${this.state.api}`;
+      fetch(queryUrl, options)
+        .then(response => response.json())
+        .then(data => {
+          const newData = update(this.state.statistics, { $set: data });
+          //this.setState({ statistics: newData });
+        })
+        .catch(error => console.log(error));
+    }
+    return null;
+    //return (
+    //<React.Fragment>
+    //<h4>Testing render</h4>
+    //</React.Fragment>
+    //);
+  }
+
   render() {
     // kak.duckdns.com
-
+    console.log(this.state.statistics);
     return (
       <React.Fragment>
         <LeafletMap
@@ -283,7 +330,9 @@ class Map extends Component {
           doubleClickZoom={false}
           onzoomend={this.handleZoom}
           onclick={this.handleMapClick}
-          ref={mapId => { this.leafMap = mapId; }}
+          ref={mapId => {
+            this.leafMap = mapId;
+          }}
         >
           <WMSTileLayer
             layers="ehp:ehp_base"
@@ -295,10 +344,19 @@ class Map extends Component {
         </LeafletMap>
         <div className="layer-toolbox">
           <Tooltip title="Toolbox" mouseEnterDelay={2}>
-            <Button type="primary" icon='switcher' onClick={this.toolboxHandler} />
+            <Button
+              type="primary"
+              icon="switcher"
+              onClick={this.toolboxHandler}
+            />
           </Tooltip>
           <div className="layer-toolbox-wrapper">
-            <Card title="Available Layer" className={`layer-toolbox-list ${this.state.toolboxShow ? '' : 'hide'}`}>
+            <Card
+              title="Layers"
+              className={`layer-toolbox-list ${
+                this.state.toolboxShow ? "" : "hide"
+              }`}
+            >
               {this.renderLayerControls()}
             </Card>
           </div>
@@ -306,30 +364,57 @@ class Map extends Component {
         <div className="layer-extension">
           <div className="layer-extension-wrapper">
             <Tooltip title="Zoom In" placement="bottom">
-              <Button type="primary" shape="circle" icon="plus" onClick={this.zoomIn} />
+              <Button
+                type="primary"
+                shape="circle"
+                icon="plus"
+                onClick={this.zoomIn}
+              />
             </Tooltip>
             <span />
             <Tooltip title="Zoom Out" placement="bottom">
-              <Button type="primary" shape="circle" icon="minus" onClick={this.zoomOut} />
+              <Button
+                type="primary"
+                shape="circle"
+                icon="minus"
+                onClick={this.zoomOut}
+              />
             </Tooltip>
           </div>
         </div>
         <div className="layer-information">
           <div className="layer-information-action">
             <Tooltip title="Information" placement="bottom">
-              <Button type="primary" icon="info" onClick={this.infoHandler}/>
+              <Button type="primary" icon="info" onClick={this.infoHandler} />
             </Tooltip>
           </div>
           <div className="information-body-wrapper">
-            <Card title="Information and Analysis" className={`layer-information-body ${this.state.infoShow ? '' : 'hide'}`}>
+            <Card
+              title="Information"
+              className={`layer-information-body ${
+                this.state.infoShow ? "" : "hide"
+              }`}
+            >
               <div className="layer-information-table">
                 {this.renderInformationTable()}
               </div>
             </Card>
           </div>
+          <div className="statistics-body-wrapper">
+            <Card
+              title="Statistics"
+              className={`layer-information-body ${
+                this.state.infoShow ? "" : "hide"
+              }`}
+            >
+              <div className="blok-statistics-table">
+                {this.renderStatisticsChart()}
+              </div>
+            </Card>
+          </div>
         </div>
       </React.Fragment>
-    )
+    );
   }
 }
 

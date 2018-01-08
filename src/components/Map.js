@@ -18,14 +18,11 @@ function serializeQuery(obj) {
   return str.join("&");
 }
 
-function getRandomColor() {
-  var letters = '0123456789ABCDEF'.split('');
-  var color = '#';
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
+const chartColors = [
+  '#ff0000', '#ff8000', '#ffff00', '#80ff00',
+  '#00ff80', '#00ffff', '#0080ff', '#0000ff',
+  '#7f00ff', '#ff00ff', '#ff007f', '#808080'
+];
 
 class Map extends PureComponent {
   constructor() {
@@ -132,12 +129,12 @@ class Map extends PureComponent {
           })
           .catch(err => console.log(err));
       } else {
-        const newData = immutability(this.state.information, {
-          $set: {}
-        });
+        const newData = immutability(this.state.information, { $set: {} });
+        const newStatistic = immutability(this.state.statistics, { $set: {} });
         this.setState({
           information: newData,
-          infoShow: false
+          infoShow: false,
+          statistics: newStatistic
         });
       }
     };
@@ -183,6 +180,11 @@ class Map extends PureComponent {
             this.setState({ statistics: newData });
           })
           .catch(error => console.log(error));
+      } else {
+        const newData = immutability(this.state.statistics, { $set: {} });
+        this.setState({
+          statistics: newData
+        });
       }
     }
 
@@ -370,7 +372,7 @@ class Map extends PureComponent {
               cx="50%"
               cy="50%"
             >
-              {mappedData.map((entry, index) => <Cell key={`cell-entry-${entry}-${index}`} fill={getRandomColor()}/>)}
+              {mappedData.map((entry, index) => <Cell key={`cell-entry-${entry}-${index}`} fill={chartColors[index % chartColors.length]}/>)}
             </Pie>
             <ChartTooltip />
             <Legend verticalAlign="bottom" height={36} />

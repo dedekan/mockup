@@ -81,6 +81,7 @@
 
 .information-body-wrapper {
   overflow: hidden;
+  max-width: 90vw;
 }
 
 .layer-information-body {

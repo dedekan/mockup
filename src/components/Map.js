@@ -19,9 +19,18 @@ function serializeQuery(obj) {
 }
 
 const chartColors = [
-  '#ff0000', '#ff8000', '#ffff00', '#80ff00',
-  '#00ff80', '#00ffff', '#0080ff', '#0000ff',
-  '#7f00ff', '#ff00ff', '#ff007f', '#808080'
+  "#ff0000",
+  "#ff8000",
+  "#ffff00",
+  "#80ff00",
+  "#00ff80",
+  "#00ffff",
+  "#0080ff",
+  "#0000ff",
+  "#7f00ff",
+  "#ff00ff",
+  "#ff007f",
+  "#808080"
 ];
 
 class Map extends PureComponent {
@@ -40,8 +49,8 @@ class Map extends PureComponent {
           name: "ehp:pg_block"
         },
         {
-          id: "planted",
-          title: "Planted",
+          id: "landuse",
+          title: "Land use",
           show: false,
           name: "ehp:pg_landuse"
         },
@@ -376,7 +385,12 @@ class Map extends PureComponent {
               cx="50%"
               cy="50%"
             >
-              {mappedData.map((entry, index) => <Cell key={`cell-entry-${entry}-${index}`} fill={chartColors[index % chartColors.length]}/>)}
+              {mappedData.map((entry, index) => (
+                <Cell
+                  key={`cell-entry-${entry}-${index}`}
+                  fill={chartColors[index % chartColors.length]}
+                />
+              ))}
             </Pie>
             <ChartTooltip />
             <Legend verticalAlign="bottom" height={36} />

@@ -45,7 +45,7 @@ class Map extends PureComponent {
         {
           id: "block",
           title: "Block",
-          show: true,
+          show: false,
           name: "ehp:pg_block"
         },
         {
@@ -53,6 +53,12 @@ class Map extends PureComponent {
           title: "Land use",
           show: false,
           name: "ehp:pg_landuse"
+        },
+        {
+          id: "slope",
+          title: "Slope",
+          show: true,
+          name: "ehp:pg_slope"
         },
         {
           id: "sawit",
